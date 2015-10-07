@@ -1,0 +1,15 @@
+In linear algebra, an eigenvector or characteristic vector of a square matrix is a vector
+that does not change its direction under the associated linear transformation. In other words—if
+v is a vector that is not zero, then it is an eigenvector of a square matrix A if Av is a scalar
+multiple of v. This condition could be written as the equation
+
+A\mathbf{v} = \lambda \mathbf{v},
+
+where λ is a number (also called a scalar) known as the eigenvalue or characteristic value
+associated with the eigenvector v. Geometrically, an eigenvector corresponding to a real,
+nonzero eigenvalue points in a direction that is stretched by the transformation and the eigenvalue
+is the factor by which it is stretched. If the eigenvalue is negative, the direction is reversed.
+
+There is a correspondence between n by n square matrices and linear transformations from an
+n-dimensional vector space to itself. For this reason, it is equivalent to define eigenvalues
+ and eigenvectors using either the language of matrices or the language of linear transformations.
