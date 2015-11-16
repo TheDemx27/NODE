@@ -15,8 +15,8 @@ function Table() {
   this.maxCharNum = config.MaxChar
   this.minCharNum = config.MinChar
   this.tableLength = config.Length
+  this.chainNum = config.Num
   this.tablePath = config.Path
-  this.tableNum = config.Num
 }
 
 /*
@@ -82,12 +82,70 @@ function setSettings() {
 * Tries to match given hash with a hash in the table. If no match can be found,
 * the reduction function is called and it searches through again.
 */
-// Table.prototype.crack = function() {
-//   if (!this.tablePath) {
-//     table.setSettings()
-//   }
-//   var stream = fs.createReadStream(this.tablePath)
-// }
+Table.prototype.crack = function(hash) {
+  var table
+  var chunk
+
+/*
+* Read the table.
+*/
+  if (!this.tablePath) {
+    table.setSettings()
+  }
+  var stream = fs.createReadStream(this.tablePath)
+  stream.on('readable', function() {
+    try {table = stream.read().toString()} catch (e) {}
+  })
+/*
+* Parse the table.
+*/
+  var index
+  var currentTails
+  var currentHeads
+  var stepNum = 0
+  for (var i = 0; i < table.length; i++) {
+    switch table[i] {
+    case ':':
+      currentHeads.push(chunk)
+      chunk = ''
+      break
+    case ',':
+      currentTails.push(chunk)
+      chunk = ''
+      break
+    default:
+      chunk += table[i]
+      break
+    }
+  }
+
+  /*
+  * Search table for hash.
+  */
+  var stepped
+  var head
+  var tail
+  index = currentTails.indexOf(hash)
+  while (index == -1 && stepNum <= this.tableLength) {
+    hash = step(hash)
+    stepNum++
+    index = currentTails.indexOf(hash)
+  }
+  if (stepNum == this.tableLength && index == -1) {
+    console.log('Hash not found.')
+  } else if (index != -1) {
+    head = currentHeads[index]
+    for (var i = 0; i < stepNum-1; i++) {
+      stepped = step(md5(head))
+    }
+    console.log(table.reduce(stepped))
+  }
+};
+
+Table.prototype.step = function(hash) {
+  reduced = table.reduce(hash)
+  return md5(reduced)
+};
 
 /*
 * Generates the list of chains, recording the first and last terms.
@@ -96,8 +154,8 @@ Table.prototype.tableGen = function() {
   var head
   var entry
   var stream = fs.createWriteStream(this.tablePath)
-  for (var j = 0; j < this.tableNum; j++) {
-    process.stdout.write((j + 1) + '/' + this.tableNum + '\r')
+  for (var j = 0; j < this.chainNum; j++) {
+    process.stdout.write((j + 1) + '/' + this.chainNum + '\r')
     head = j.toString()
     hash = table.chainGen(head)
     entry = sprintf('%s:%s,', head, hash)
@@ -114,8 +172,7 @@ Table.prototype.chainGen = function(head) {
   var hash = md5(head)
   var reduced
   for (var link = 0; link < this.tableLength; link++) {
-    reduced = table.reduce(link, hash)
-    hash = md5(reduced)
+    step(hash)
   }
   return hash
 };
@@ -123,10 +180,10 @@ Table.prototype.chainGen = function(head) {
 /*
 * The reduction function. Creates acceptable input for next hash.
 */
-Table.prototype.reduce = function(link, hash) {
+Table.prototype.reduce = function(hash) {
   hash = parseInt(hash, 16)
   hash = hash.toString(36)
-  var length = (link % this.maxCharNum + 1) + this.minCharNum
+  var length = 7 //(link % this.maxCharNum + 1) + this.minCharNum
   var reduced = hash.substring(0, length)
   return reduced
 };
